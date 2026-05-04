@@ -24,27 +24,43 @@ function loadFromStorage() {
   }
 }
 
-function saveToStorage(data) {
+function saveToStorage(data: { uploads: any[] }) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
 export default function App() {
-  const [data, setData] = useState({ uploads: [] });
+  // const [data, setData] = useState({ uploads: [] });
   const [input, setInput] = useState("");
   const [animKey, setAnimKey] = useState(0);
   const [loaded, setLoaded] = useState(false);
-  const [toast, setToast] = useState(null);
+  // const [toast, setToast] = useState(null);
   const [importing, setImporting] = useState(false);
-  const fileInputRef = useRef();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     setData(loadFromStorage());
     setLoaded(true);
   }, []);
 
+  type Upload = {
+    id: number;
+    title: string;
+    date: string;
+  };
+
+  type DataType = {
+    uploads: Upload[];
+  };
+  const [data, setData] = useState<DataType>({ uploads: [] });
+  const [toast, setToast] = useState<{
+    msg: string;
+    color: string;
+  } | null>(null);
+
   useEffect(() => {
     if (loaded) saveToStorage(data);
   }, [data, loaded]);
-  const showToast = (msg, color = "#22c55e") => {
+  // const [toast, setToast] = useState(null);
+  const showToast = (msg: string, color = "#22c55e") => {
     setToast({ msg, color });
     setTimeout(() => setToast(null), 2500);
   };
@@ -96,15 +112,60 @@ export default function App() {
     showToast(" Backup downloaded!");
   };
   const triggerImport = () => fileInputRef.current?.click();
-  const handleImport = (e) => {
+  // const handleImport = (e: { target: { files: any[]; value: string } }) => {
+  //   const file = e.target.files?.[0];
+  //   if (!file) return;
+  //   setImporting(true);
+  //   const reader = new FileReader();
+  //   reader.onload = (ev) => {
+  //     try {
+  //       // const parsed = JSON.parse(ev.target.result);
+  //       const result = ev.target?.result;
+
+  //       if (typeof result !== "string") {
+  //         throw new Error("Invalid file");
+  //       }
+
+  //       const parsed = JSON.parse(result);
+  //       if (!Array.isArray(parsed.uploads)) throw new Error("Invalid format");
+  //       if (
+  //         window.confirm(
+  //           `Import ${parsed.uploads.length} uploads from backup?\nThis will REPLACE your current progress.`,
+  //         )
+  //       ) {
+  //         setData({ uploads: parsed.uploads });
+  //         showToast(`✓ Imported ${parsed.uploads.length} uploads`);
+  //       }
+  //     } catch {
+  //       showToast(" Invalid backup file", "#ef4444");
+  //     }
+  //     setImporting(false);
+  //     e.target.value = "";
+  //   };
+  //   reader.readAsText(file);
+  // };
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
     setImporting(true);
+
     const reader = new FileReader();
-    reader.onload = (ev) => {
+
+    reader.onload = (ev: ProgressEvent<FileReader>) => {
       try {
-        const parsed = JSON.parse(ev.target.result);
-        if (!Array.isArray(parsed.uploads)) throw new Error("Invalid format");
+        const result = ev.target?.result;
+
+        if (typeof result !== "string") {
+          throw new Error("Invalid file");
+        }
+
+        const parsed = JSON.parse(result);
+
+        if (!Array.isArray(parsed.uploads)) {
+          throw new Error("Invalid format");
+        }
+
         if (
           window.confirm(
             `Import ${parsed.uploads.length} uploads from backup?\nThis will REPLACE your current progress.`,
@@ -116,9 +177,11 @@ export default function App() {
       } catch {
         showToast(" Invalid backup file", "#ef4444");
       }
+
       setImporting(false);
       e.target.value = "";
     };
+
     reader.readAsText(file);
   };
   const bars = Array.from({ length: 10 }, (_, i) => {
@@ -210,7 +273,7 @@ export default function App() {
               letterSpacing: "-0.02em",
             }}
           >
-            100 Video Upload
+            100 Video Upload - Tamil Channel
           </h1>
           <div
             style={{
